@@ -5,7 +5,7 @@ import datetime
 
 #---------------- Variáveis -------------------
 token = ''
-timer = True
+timer_verif = 1   # TEMPO PARA REALIZAR A AQUISIÇÃO DE DADOS
 minute = 0
 status = False
 params={}
@@ -51,66 +51,69 @@ def verify_time(time_data):
   return minute_delta
 
 def clean_data(params,count):
-    agua_bruta = params['IFC050 Água Bruta']
-    contador1_agua_bruta = agua_bruta['Contador 01: Leitura  (m³)']
-    print(f'Contador 1 Água Bruta : tipo é: {type(contador1_agua_bruta)} e o valor é {contador1_agua_bruta}')
+  agua_bruta = params['IFC050 Água Bruta']
+  contador1_agua_bruta = agua_bruta['Contador 01: Leitura  (m³)']
+  print(f'Contador 1 Água Bruta : tipo é: {type(contador1_agua_bruta)} e o valor é {contador1_agua_bruta}')
     
-    agua_tratada = params['IFC050 Água Tratada']
-    contador1_agua_tratada = agua_tratada['Contador 01: Leitura  (m³)  ']
-    print(f'Contador 1 Água Tratada : tipo é: {type(contador1_agua_tratada)} e o valor é {contador1_agua_tratada}')
+  agua_tratada = params['IFC050 Água Tratada']
+  contador1_agua_tratada = agua_tratada['Contador 01: Leitura  (m³)  ']
+  print(f'Contador 1 Água Tratada : tipo é: {type(contador1_agua_tratada)} e o valor é {contador1_agua_tratada}')
     
-    soft_starter = params['SSW-07 Soft-Starter']
-    potencia_soft_starter = soft_starter['Potência Aparente de Saída [KVA]']
-    print(f'Potência Aparente de Saída Soft Starter : tipo é: {type(potencia_soft_starter)} e o valor é {potencia_soft_starter}')
-    
-    
-    file = open("db_test.txt", "a+")
-    file.write(f'{count};')
-    file.write(f'{datetime.datetime.now()};')
-    file.write(f'{contador1_agua_bruta};')
-    file.write(f'{contador1_agua_tratada};')
-    file.write(f'{potencia_soft_starter}\n') 
-    file.close()
-    
-#---------------- LOGIN SERVER USER (POST) -----------------------
-if not status:
-  token,status_login = get_token(user_data)
+  soft_starter = params['SSW-07 Soft-Starter']
+  potencia_soft_starter = soft_starter['Potência Aparente de Saída [KVA]']
+  print(f'Potência Aparente de Saída Soft Starter : tipo é: {type(potencia_soft_starter)} e o valor é {potencia_soft_starter}')
   
-  if (status_login==200):
-    status=True
-    
-  print('get token')
-else:
-  print('ERROR TO GET TOKEN')
+  file = open("db_test.txt", "a+")
+  file.write(f'{count};')
+  file.write(f'{datetime.datetime.now()};')
+  file.write(f'{contador1_agua_bruta};')
+  file.write(f'{contador1_agua_tratada};')
+  file.write(f'{potencia_soft_starter}\n') 
+  file.close()
   
-time = datetime.datetime.now()
-counter = 0
 
 file = open("db_test.txt", "a+")
 file.write(f'N_Aquisicao;Data | Hora;Contador 1 Agua Bruta;Contador 1 Agua Tratada;Potencia Soft-Starter\n')
 file.close()
 
-while status:
 
-  timer = verify_time(time)
-  
-  
-  #---------------- NODE PARAMS (GET) ------------------------
-  if(int(timer)==1):
-    counter = counter + 1
+while True:
+ 
+  #---------------- LOGIN SERVER USER (POST) -----------------------
+  if not status:
+    token,status_login = get_token(user_data)
     
-    params,status_node_params = get_node_params(token) 
-    clean_data(params,counter)
-     
-    print(params)
-    print('get params')
-    print(f'contador = {counter} às {time}')
-    time = datetime.datetime.now()
+    if (status_login==200):
+      status=True
+      
+    print('get token')
+  else:
+    print('ERROR TO GET TOKEN')
+    
+  time = datetime.datetime.now()
+  counter = 0
 
-    if (status_node_params != 200):
-      status=False
-      print("STATUS NODE PARAMS ERROR")
+  while status:
 
-print('ERROR TO GET NODE PARAMS')
+    timer = verify_time(time)
+    
+    
+    #---------------- NODE PARAMS (GET) ------------------------
+    if(int(timer)==timer_verif):   ## AQUI SE DEFINI
+      counter = counter + 1
+      
+      params,status_node_params = get_node_params(token) 
+      clean_data(params,counter)
+      
+      print(params)
+      print('get params')
+      print(f'contador = {counter} às {time}')
+      time = datetime.datetime.now()
+
+      if (status_node_params != 200):
+        status=False
+        print("STATUS NODE PARAMS ERROR")
+
+  print('ERROR TO GET NODE PARAMS')
 
 
